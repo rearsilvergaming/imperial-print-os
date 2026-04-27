@@ -1,0 +1,9 @@
+{
+  "job_name": "test_front_1c_dark",
+  "artwork_path": "C:/Users/Ben/Documents/Imperial Infusions/imperial-print-os/jobs/sample-art.png",
+  "garment": "tee",
+  "zone": "full_front",
+  "ink_profile": "1c_dark",
+  "press_profile": "four_screen_manual",
+  "output_dir": "./exports/test_front_1c_dark"
+}
