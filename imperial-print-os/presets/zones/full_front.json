@@ -1,0 +1,11 @@
+@'
+{
+  "zone": "full_front",
+  "max_width_in": 12,
+  "max_height_in": 16,
+  "anchor": "center",
+  "offset_x_in": 0,
+  "offset_y_in": 0,
+  "rotation_allowed": false
+}
+'@ | Set-Content presets/zones/full_front.json

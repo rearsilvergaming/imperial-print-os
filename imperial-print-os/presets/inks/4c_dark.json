@@ -1,0 +1,23 @@
+@'
+{
+  "profile": "4c_dark",
+  "garment_tone": "dark",
+  "max_channels": 4,
+  "channels": [
+    { "name": "UNDERBASE_WHITE", "type": "spot", "required": true },
+    { "name": "INK_1", "type": "spot", "required": true },
+    { "name": "INK_2", "type": "spot", "required": true },
+    { "name": "INK_3", "type": "spot", "required": true }
+  ],
+  "halftone": {
+    "lpi": 45,
+    "angle_map": {
+      "UNDERBASE_WHITE": 22.5,
+      "INK_1": 52.5,
+      "INK_2": 82.5,
+      "INK_3": 7.5
+    },
+    "dot_shape": "round"
+  }
+}
+'@ | Set-Content presets/inks/4c_dark.json
