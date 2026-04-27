@@ -1,0 +1,15 @@
+@'
+{
+  "garment": "tee",
+  "fabric": "cotton",
+  "notes": "Base garment profile for t-shirts.",
+  "supported_zones": [
+    "full_front",
+    "full_back",
+    "left_chest",
+    "sleeve_left",
+    "sleeve_right",
+    "neck_label_inside"
+  ]
+}
+'@ | Set-Content presets/garments/tee.json
