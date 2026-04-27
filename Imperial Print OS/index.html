@@ -7,8 +7,60 @@
   </head>
   <body>
     <h1>Imperial Print OS</h1>
-    <button id="ping">Test Button</button>
-    <pre id="out">Ready.</pre>
+
+    <div class="card">
+      <h2>Prep</h2>
+
+      <label>Garment</label>
+      <select id="garment">
+        <option value="tee">tee</option>
+        <option value="hoodie">hoodie</option>
+        <option value="tote">tote</option>
+        <option value="denim_jacket">denim_jacket</option>
+        <option value="jeans">jeans</option>
+      </select>
+
+      <label>Zone</label>
+      <select id="zone">
+        <option value="full_front">full_front</option>
+        <option value="full_back">full_back</option>
+        <option value="left_chest">left_chest</option>
+        <option value="sleeve_left">sleeve_left</option>
+        <option value="sleeve_right">sleeve_right</option>
+      </select>
+
+      <label>Ink Profile</label>
+      <select id="ink">
+        <option value="1c_dark">1c_dark</option>
+        <option value="4c_dark">4c_dark</option>
+      </select>
+
+      <button id="runPrep">Run Prep on Selected Layer</button>
+    </div>
+
+    <div class="card">
+      <h2>Distress (UI scaffold)</h2>
+
+      <label>Distress Level</label>
+      <select id="distressLevel">
+        <option value="level_0_clean">Level 0 — Clean</option>
+        <option value="level_1_faded">Level 1 — Faded</option>
+        <option value="level_2_worn">Level 2 — Worn</option>
+        <option value="level_3_distressed">Level 3 — Distressed</option>
+      </select>
+
+      <label>Amount</label>
+      <input id="amount" type="range" min="0" max="100" value="50" />
+      <div id="amountValue">50</div>
+
+      <button id="previewDistress">Preview Distress Settings</button>
+    </div>
+
+    <div class="card">
+      <h2>Status</h2>
+      <pre id="out">Ready.</pre>
+    </div>
+
     <script src="./index.js"></script>
   </body>
 </html>
