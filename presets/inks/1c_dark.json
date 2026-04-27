@@ -1,19 +1,25 @@
-@'
 {
-  "profile": "1c_dark",
-  "garment_tone": "dark",
-  "max_channels": 2,
-  "channels": [
-    { "name": "UNDERBASE_WHITE", "type": "spot", "required": true },
-    { "name": "INK_1", "type": "spot", "required": true }
-  ],
-  "halftone": {
-    "lpi": 45,
-    "angle_map": {
-      "UNDERBASE_WHITE": 22.5,
-      "INK_1": 52.5
-    },
-    "dot_shape": "round"
-  }
+    "profile":  "1c_dark",
+    "garment_tone":  "dark",
+    "max_channels":  2,
+    "channels":  [
+                     {
+                         "name":  "UNDERBASE_WHITE",
+                         "type":  "spot",
+                         "required":  true
+                     },
+                     {
+                         "name":  "INK_1",
+                         "type":  "spot",
+                         "required":  true
+                     }
+                 ],
+    "halftone":  {
+                     "lpi":  45,
+                     "angle_map":  {
+                                       "UNDERBASE_WHITE":  22.5,
+                                       "INK_1":  52.5
+                                   },
+                     "dot_shape":  "round"
+                 }
 }
-'@ | Set-Content presets/inks/1c_dark.json

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "levels": [
+    {
+      "id": "level_0_clean",
+      "label": "Level 0 — Clean",
+      "coverage_percent": { "min": 98, "max": 100, "default": 100 },
+      "edge_breakdown": { "min": 0, "max": 5, "default": 0 },
+      "internal_wear": { "min": 0, "max": 5, "default": 0 },
+      "crack_intensity": { "min": 0, "max": 5, "default": 0 },
+      "chunk_dropout": { "min": 0, "max": 3, "default": 0 }
+    },
+    {
+      "id": "level_1_faded",
+      "label": "Level 1 — Faded",
+      "coverage_percent": { "min": 90, "max": 95, "default": 93 },
+      "edge_breakdown": { "min": 5, "max": 20, "default": 10 },
+      "internal_wear": { "min": 5, "max": 20, "default": 12 },
+      "crack_intensity": { "min": 0, "max": 10, "default": 2 },
+      "chunk_dropout": { "min": 0, "max": 8, "default": 1 }
+    },
+    {
+      "id": "level_2_worn",
+      "label": "Level 2 — Worn",
+      "coverage_percent": { "min": 80, "max": 90, "default": 85 },
+      "edge_breakdown": { "min": 15, "max": 40, "default": 25 },
+      "internal_wear": { "min": 15, "max": 40, "default": 25 },
+      "crack_intensity": { "min": 8, "max": 30, "default": 15 },
+      "chunk_dropout": { "min": 3, "max": 20, "default": 8 }
+    },
+    {
+      "id": "level_3_distressed",
+      "label": "Level 3 — Distressed",
+      "coverage_percent": { "min": 60, "max": 80, "default": 72 },
+      "edge_breakdown": { "min": 30, "max": 70, "default": 45 },
+      "internal_wear": { "min": 25, "max": 65, "default": 40 },
+      "crack_intensity": { "min": 20, "max": 70, "default": 40 },
+      "chunk_dropout": { "min": 15, "max": 55, "default": 28 }
+    }
+  ]
+}

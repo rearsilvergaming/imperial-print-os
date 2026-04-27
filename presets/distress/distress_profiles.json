@@ -1,0 +1,64 @@
+{
+  "levels": {
+    "0_clean": {
+      "coverage_min": 98,
+      "coverage_max": 100,
+      "edge": 0,
+      "internal": 0,
+      "crack": 0,
+      "chunk": 0
+    },
+    "1_faded": {
+      "coverage_min": 90,
+      "coverage_max": 95,
+      "edge": 8,
+      "internal": 10,
+      "crack": 0,
+      "chunk": 0
+    },
+    "2_worn": {
+      "coverage_min": 80,
+      "coverage_max": 90,
+      "edge": 20,
+      "internal": 22,
+      "crack": 10,
+      "chunk": 4
+    },
+    "3_distressed": {
+      "coverage_min": 60,
+      "coverage_max": 80,
+      "edge": 40,
+      "internal": 35,
+      "crack": 32,
+      "chunk": 20
+    }
+  },
+  "collections": {
+    "HEAD_CANON": {
+      "max_level": "1_faded",
+      "default_level": "1_faded"
+    },
+    "SEE_ME_AS_I_AM": {
+      "default_map": {
+        "WHO I AM": "2_worn",
+        "WHO I'VE ALWAYS BEEN": "2_worn",
+        "NOT YOUR VERSION OF A MAN": "2_worn",
+        "NOT YOUR VERSION OF A WOMAN": "2_worn",
+        "PRESENTING AS A MAN": "2_worn",
+        "PRESENTING AS A WOMAN": "2_worn",
+        "NOT A PHASE": "0_clean",
+        "NONE OF YOUR BUSINESS": "0_clean",
+        "MY PEOPLE": "0_clean",
+        "IN DEVELOPMENT": "0_clean"
+      }
+    },
+    "SYMBOL_GRAPHICS": {
+      "default_map": {
+        "UNBROKEN": "3_distressed",
+        "UNSEEN": "3_distressed",
+        "UNBOTHERED": "2_worn",
+        "UNSERIOUS": "2_worn"
+      }
+    }
+  }
+}

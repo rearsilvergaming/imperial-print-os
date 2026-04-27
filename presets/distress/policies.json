@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "mode": {
+    "enforce_hard_limits": false,
+    "show_warnings": true,
+    "auto_suggest_on_name_match": true
+  },
+  "rules": [
+    {
+      "rule_id": "head_canon_default",
+      "match": {
+        "type": "contains_any",
+        "values": ["BELIEVE", "CARRY ON", "POWER OF THREE", "NIGHT SHIFT"]
+      },
+      "suggest_level": "level_1_faded",
+      "max_recommended_level": "level_1_faded",
+      "message": "HEAD CANON pieces are recommended at Level 1 max for subtle vintage feel."
+    },
+    {
+      "rule_id": "symbol_distressed_default",
+      "match": { "type": "contains_any", "values": ["UNBROKEN", "UNSEEN"] },
+      "suggest_level": "level_3_distressed",
+      "max_recommended_level": "level_3_distressed",
+      "message": "Symbol pieces UNBROKEN/UNSEEN are usually strongest at Level 3."
+    },
+    {
+      "rule_id": "symbol_worn_default",
+      "match": {
+        "type": "contains_any",
+        "values": ["UNBOTHERED", "UNSERIOUS"]
+      },
+      "suggest_level": "level_2_worn",
+      "max_recommended_level": "level_2_worn",
+      "message": "UNBOTHERED/UNSERIOUS typically perform best at Level 2."
+    },
+    {
+      "rule_id": "sharp_statement_clean",
+      "match": {
+        "type": "contains_any",
+        "values": [
+          "NOT A PHASE",
+          "NONE OF YOUR BUSINESS",
+          "MY PEOPLE",
+          "IN DEVELOPMENT"
+        ]
+      },
+      "suggest_level": "level_0_clean",
+      "max_recommended_level": "level_1_faded",
+      "message": "Sharp statement pieces should remain clean or only lightly faded."
+    }
+  ]
+}
