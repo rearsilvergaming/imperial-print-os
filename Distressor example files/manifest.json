@@ -1,0 +1,103 @@
+{
+  "manifestVersion": 4,
+  "id": "4c1e4b4a",
+  "name": "Texturelabs Distressor",
+  "version": "1.0.7",
+  "main": "index.html",
+  "host": {
+    "app": "PS",
+    "minVersion": "23.0.0",
+    "data": {
+      "apiVersion": 2,
+      "enableMenuRecording": true
+    }
+  },
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "primary",
+      "label": {
+        "default": "Texturelabs Distressor | tg: @dadksy_leaks"
+      },
+      "minimumSize": {
+        "width": 240,
+        "height": 240
+      },
+      "maximumSize": {
+        "width": 500,
+        "height": 800
+      },
+      "preferredDockedSize": {
+        "width": 300,
+        "height": 560
+      },
+      "preferredFloatingSize": {
+        "width": 290,
+        "height": 510
+      },
+      "icons": [
+        {
+          "width": 23,
+          "height": 23,
+          "path": "icons/txl-dark.png",
+          "scale": [
+            1,
+            2
+          ],
+          "theme": [
+            "darkest",
+            "dark",
+            "medium"
+          ]
+        },
+        {
+          "width": 23,
+          "height": 23,
+          "path": "icons/txl-light.png",
+          "scale": [
+            1,
+            2
+          ],
+          "theme": [
+            "lightest",
+            "light"
+          ]
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/dark.png",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "dark",
+        "darkest"
+      ],
+      "species": [
+        "generic"
+      ]
+    },
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/light.png",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "lightest",
+        "light"
+      ],
+      "species": [
+        "generic"
+      ]
+    }
+  ]
+}

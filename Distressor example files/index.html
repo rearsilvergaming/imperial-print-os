@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html class="myPanel">
+   <head>
+      <script src="index.js"></script>
+   </head>
+   <style>
+
+      div {
+         outline: 0px solid black;
+      }
+
+      .wrapper {
+          position: absolute;
+          top: 0px; left: 0; right: 0; bottom: 0;
+      }
+
+      .yScroll {
+         overflow-y: scroll;
+      }
+
+      .maxSize {
+         max-width: 320px;
+      }
+
+      .masterOutline {
+         padding: 0px 8px 0 12px;
+      }
+
+      .topContainer {
+         display: flex;
+         width: 100%;
+         padding-bottom: 24%;
+         margin-bottom: 0px;
+         box-sizing: border-box;
+         position: relative;
+      }
+
+      .topFlex {
+         display: flex;
+         position: absolute;
+         left: 0;
+         width: calc(100% - 20px);
+         margin-left: 12px;
+         height: 100%;
+      }
+
+      .flexWrap {
+         display: flex;
+         flex-direction: column;
+         width: 100%;
+      }
+
+      .overlayStyle {
+         flex: 1;
+         padding: 5px 0;
+      }
+
+      .horizFlex {
+         display: flex;
+      }
+
+      .fillWhite {
+         fill: white
+      }
+
+      .fillGrey {
+         fill: #d6d6d6;
+      }
+
+
+      .generalSlider {
+         flex: 80;
+         margin-top: -7.5px;
+      }
+
+      .title {
+         color: #d6d6d6;
+         font-size: 11px; 
+         position: relative;
+      }
+
+      .topMove {
+         top: 2px;
+      }
+
+      .topMoveLess {
+         top: -1px;
+      }
+
+      .greyText {
+         color: #d6d6d6;
+         text-align: center;
+         padding: 3px 0;
+         border: 1px solid #666666;
+      }
+
+      .settingsButtons {
+         margin: 2px 0 7px 5px;
+      }
+
+      .greyText:hover {
+         color: white;
+      }
+
+
+      .fillPossible {
+         fill: #999999
+      }
+
+      .fillPossible:hover {
+         fill: white
+      }
+
+      .fillInactive {
+         fill: #888888
+      }
+
+      .flexOne img {
+         pointer-events: none;
+         object-fit: contain;
+         width: 100%;
+      }
+
+      .presetsMenu {
+         flex-direction: column;
+         background-color: #383838;
+         position: absolute;
+         max-height: calc(calc(98vh - 90px) - 8vw);
+         top: calc(50px + 24.5vw);
+         left: 12.5px;
+         width: calc(50% - 18.5px);
+         max-width: 128px;
+         padding: 0 0px 5px 10px;
+         z-index: 2;
+         margin-right: 25px;
+         overflow-y: scroll;
+      }
+
+      @media (min-width: 260px) { 
+         .presetsMenu {
+            top: 115.75px;
+         }
+         .currentImage {
+            background-size: 90px;
+         }
+      }
+
+
+      #hideDistress {
+         cursor: pointer;
+      }
+
+      .actionButton {
+         align-items: center;
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+         border: 1px solid #707070;
+         border-radius: 2px;
+         cursor: pointer;
+         color: white;
+         font-size: 1.03em;
+      }
+
+      .actionButton:hover {
+         background-color: #404040;
+      }
+
+
+      .revertButton {
+         align-items: center;
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+         border: 1px solid #666666;
+         cursor: pointer;
+         color: #d6d6d6;
+         font-size: 1em;
+         border-radius: 2px;
+      }
+
+      .revertButton:hover {
+         color: white;
+      }
+
+      .revertButton:hover .fillGrey {
+          fill: white;
+      }
+
+      .copyright {
+         color: #a4a4a4;
+         font-size: 1.1em;
+         flex: 0 0 190px;
+         position: relative;
+      }
+
+      .copyright a {
+         color: #5bb6d4;
+         font-size: 1em;
+      }
+
+      .notices {
+         margin-top: 3px;
+         display: flex;
+         width: 100%;
+         height: 18px;
+         justify-content: space-between;
+      }
+
+      .greyed {
+         position: absolute;
+         height: 430px;
+         width: 94%;
+         z-index: 3;
+         margin-top: 2px;
+         background-color: rgba(84, 84, 84, 0.5);
+         pointer-events: none;
+      }
+
+      .darkBG {
+         background-color: #454545;
+      }
+
+      .enactedBG {
+         background-color: #454545;
+      }
+
+      .copyPasteGo {
+         background-color: #454545;
+         color: white;
+      }
+
+      .nonAction {
+         color: #6d6d6d;
+      }
+
+      .nonAction:hover {
+         background-color: transparent;
+         cursor: default;
+      }
+
+      .nonAction .fillWhite {
+         fill: #6d6d6d;
+      }
+
+      .validate {
+         flex-direction: column;
+         background-color: #535353;
+         position: absolute;
+         width: 100%;
+         height: 100%;
+         z-index: 5;
+         display: flex;
+         padding: 1px;
+         left: -2%;
+         top: 0;
+      }
+
+      .invisible {
+         display: none;
+      }
+
+      #grungeCurrentValue {
+         background-color: #454545;
+      }
+
+      #arrowDrop {
+         border: 1px solid #666666;
+      }
+
+      .grungeDiv {
+         padding: 2px 0;
+      }
+
+      .grungeDiv:hover {
+               background-color: #272727;
+            }
+
+      .currentImage {
+         background-size: 100%;
+         background-position: center;
+         border: 1px solid #666666;
+         border-right: none;
+      }
+
+      
+
+@media (prefers-color-scheme: lightest), (prefers-color-scheme:light) {
+
+   #lockLogo {
+      background-image: url(images/distressorLogoLockDark.png);
+   }
+
+   .fillWhite {
+      fill: #333333
+   }
+
+   .fillGrey {
+      fill: #777777;
+   }
+
+   .revertButton:hover .fillGrey {
+       fill: #333333;
+   }
+
+   .title {
+      color: #333333;
+   }
+
+   .greyText:hover {
+      color: #333333;
+   }
+
+   .actionButton {
+      color: #333333;
+   }
+
+   .actionButton:hover {
+      background-color: #cccccc;
+   }
+
+   .revertButton {
+      color: #777777;
+   }
+
+   .revertButton:hover {
+      color: #333333;
+   }
+
+   .copyright {
+      color: #555555;
+   }
+
+   .copyright a {
+      color: #5bb6d4;
+      font-size: 1em;
+   }
+
+   .grungeStyle img {
+      opacity: .5;
+   }
+
+   .darkSample {
+      display: initial;
+   }
+
+   .lightSample {
+      display: none;
+   }
+
+   #logo {
+      background-image: url(images/distressorLogoDark.png)
+   }
+
+   .fillPossible {
+      fill: #555555
+   }
+
+   .fillPossible:hover {
+      fill: #333333
+   }
+
+   #arrowDrop {
+         border: 1px solid #949494;
+      }
+
+   .copyright a {
+      color: #5bb6d4;
+      }
+
+   .currentImage {
+      border: 1px solid #949494;
+      border-right: none;
+   }
+
+
+}
+
+@media (prefers-color-scheme: darkest), (prefers-color-scheme:dark) {
+
+   #lockLogo {
+      background-image: url(images/distressorLogoLock.png);
+   }
+
+   .darkSample {
+      display: none;
+   }
+
+   #logo {
+      background-image: url(images/distressorLogo.png)
+   }
+
+   .lightSample {
+      display: initial;
+   }
+}
+
+@media (prefers-color-scheme: darkest) {
+
+   .validate {
+      background-color: rgba(49, 49, 49);
+   }
+
+   .greyed {
+      background-color: rgba(49, 49, 49, 0.5);
+   }
+
+   .copyPasteGo {
+      background-color: #252525;
+   }
+
+   .greyText {
+         border: 1px solid #474747;
+      }
+
+   .currentImage {
+      border: 1px solid #474747;
+      border-right: none;
+   }
+
+   #arrowDrop {
+         border: 1px solid #474747;
+      }
+
+   #grungeCurrentValue {
+      background-color: #252525;
+   }
+
+   .presetsMenu {
+      background-color: #252525;
+   }
+
+   .grungeDiv:hover {
+            background-color: #222222;
+         }
+
+   .actionButton:hover {
+      background-color: #222222;
+   }
+}
+
+@media (prefers-color-scheme: light) {
+
+   .validate {
+      background-color: rgba(187, 187, 187);
+   }
+
+   .greyed {
+      background-color: rgba(187, 187, 187, 0.5);
+   }
+
+   .presetsMenu {
+      background-color: #cecece;
+   }
+
+   .grungeDiv:hover {
+            background-color: #e6e6e6;
+         }
+
+   #grungeCurrentValueDark {
+      background-color: #cecece;
+   }
+
+   .actionButton:hover {
+      background-color: #cecece;
+   }
+
+   .greyText {
+      color: #555555;
+   }
+
+   .copyPasteGo {
+      background-color: #cecece;
+      color: black;
+   }
+}
+
+@media (prefers-color-scheme: lightest) {
+
+   .validate {
+      background-color: rgba(239, 239, 239);
+   }
+
+   .greyed {
+      background-color: rgba(239, 239, 239, 0.5);
+   }
+
+   .presetsMenu {
+      background-color: #f5f5f5;
+   }
+
+   #grungeCurrentValueDark {
+      background-color: #fcfcfc;
+   }
+
+   .grungeDiv:hover {
+            background-color: #ffffff;
+         }
+
+   .actionButton:hover {
+      background-color: #ffffff;
+   }
+
+   .greyText {
+      color: #888888;
+   }
+
+   .copyPasteGo {
+      background-color: #fcfcfc;
+      color: black;
+   }
+}
+
+
+
+
+
+
+</style>
+
+
+<body>
+   <div id="page" class="wrapper">
+      <div class="maxSize">
+         <div class="topContainer" style="flex: 1; max-height: 60px;">
+            <div id="mainControls" class="topFlex" style="flex: 1; max-width: 300px; max-height: 77px;">
+               <div id="logo" class="" style="flex: 312; background-size: 100%; background-position: center;"></div>          
+               <div id="generate" class="actionButton generate-button" style="flex: 340; margin: 10px 0 2px 8px;">
+                  <div class="generate-button" style="width: 22px; height: 12px">
+                     <svg id="generateSVG" class="fillWhite generate-button" width="100%" height="100%" viewBox="0 0 41.2 22.2">
+                     <path class="generate-button" d="M30.9,8.3L20.6,20L10.3,8.3h6.4V2.1h7.8v6.2H30.9z"/>
+                     </svg>
+                  </div>
+                  <div class="generate-button">Apply</div>
+               </div>
+               <!--
+               <div id="test" class="actionButton generate-button" style="flex: 340; margin: 10px 0 2px 8px;">
+                  <div class="generate-button" style="width: 22px; height: 12px">
+                  </div>
+                  <div class="generate-button">Test</div>
+               </div>
+-->
+               <div id="remove" class="remove-button revertButton invisible" style="flex: 100; margin: 10px 4px 4px 0;">
+                  <div class="remove-button" style="width: 26px; height: 16px">
+                     <svg id="removeSVG" class="fillGrey remove-button" width="100%" height="100%" viewBox="0 2 48.2 22.2">
+                     <path class="remove-button" d="M24.5,11.1l6.5,6.5l-3.9,3.9L20.6,15l-6.5,6.5l-3.9-3.9l6.5-6.5l-6.5-6.5l3.9-3.9l6.5,6.5l6.5-6.5L31,4.6
+   L24.5,11.1z"/>
+                     </svg>
+                  </div>
+                  <div class="remove-button">Remove Distress</div>
+               </div>
+
+               <div id="hideDistress" class="hide-button revertButton invisible" style="flex: 100; margin: 10px 0 4px 4px;">
+                  <div class="hide-button" id=hideButton style="text-align: center;">
+                     <div class="hide-button" style="width: 22px; height: 16px; display: inline-block;">
+                           <svg id="hideSVG" class="fillGrey hide-button" width="100%" height="100%" viewBox="0 4 48.2 22.2">
+                           <path class="hide-button" d="M20.6,0.7C10.5,0.7,2.3,11.1,2.3,11.1s8.2,10.4,18.3,10.4S39,11.1,39,11.1S30.7,0.7,20.6,0.7z M20.6,19.5
+      c-4.6,0-8.4-3.8-8.4-8.4c0-4.6,3.8-8.4,8.4-8.4S29,6.4,29,11.1C29,15.7,25.3,19.5,20.6,19.5z M24,11.1c0,1.9-1.5,3.4-3.4,3.4
+      c-1.9,0-3.4-1.5-3.4-3.4c0-1.9,1.5-3.4,3.4-3.4C22.5,7.7,24,9.2,24,11.1z"/>
+                           </svg>
+                        </div>
+                        <br>
+                     <div class="hide-button" style="display: inline-block;">Hide Distress</div>
+                  </div>
+                  <div id="showButton" class="hide-button invisible" style="text-align: center;">
+                     <div class="hide-button" style="width: 22px; height: 16px; display: inline-block;">
+                           <svg id="showSVG" class="fillGrey hide-button" width="100%" height="100%" viewBox="0 4 48.2 22.2">
+                           <path class="hide-button" d="M2.3,11.1c0,0,8.2-10.4,18.3-10.4c0.9,0,1.9,0.1,2.8,0.3l-1.8,1.8c-0.3,0-0.7-0.1-1-0.1c-4.6,0-8.4,3.8-8.4,8.4
+      c0,0.3,0,0.7,0.1,1l-4.4,4.4C4.5,13.8,2.3,11.1,2.3,11.1z M32.4,5l-3.7,3.7c0.2,0.7,0.3,1.5,0.3,2.3c0,4.6-3.8,8.4-8.4,8.4
+      c-0.8,0-1.6-0.1-2.3-0.3l-1.8,1.8c1.3,0.3,2.7,0.5,4.1,0.5C30.7,21.4,39,11.1,39,11.1S36.4,7.9,32.4,5z M30.2,3.7
+      c0.8-0.8,0.8-2.2,0-3s-2.2-0.8-3,0L9.5,18.4c-0.8,0.8-0.8,2.2,0,3s2.2,0.8,3,0L30.2,3.7z"/>
+                           </svg>
+                        </div>
+                        <br>
+                        <div class="hide-button" style="display: inline-block;">Show Distress</div>
+
+                  </div>
+               </div>
+
+
+            </div>
+
+         </div>
+
+         <div class="allOtherControls">
+
+            <!-- <div id="" class="actionButton" style="height: 50px">Apply Distress</div>
+                  <div id="action" class="actionButton" style="height: 50px">Action</div>
+                  <div id="remove" class="revertButton" style="height: 50px">Revert to Original</div>
+
+                   -->
+
+            <div class="masterOutline">
+
+               <div class="flexWrap">
+
+                  <div id="validateScreen" class="validate">
+                     <div style="flex: 1; display: flex; flex-direction: column; align-items: center">
+                        <div id="lockLogo" style="flex: 2 1 80px; background-size: 95%; background-position: left center; width: 200px; margin-top: 10px;"></div>
+                        <div style="flex: 6; display: flex; flex-direction: column; margin: 2px 12px 0 20px">
+                           <div style="flex: 6; margin: auto; width: 200px">
+                              <sp-detail>Please enter your license key:</sp-detail>
+                              <sp-textfield id=keyfield placeholder="License key" style="width: 210px;"></sp-textfield>
+                              <div style="flex: 6; display: flex; justify-content: center; margin-top: 8px;">
+                                 <sp-button id="testAPI" variant="secondary" style="flex: 1; margin: 0 2px; font-size: 1.1em">Verify</sp-button>
+                              </div>
+                              <div id="internetError" class="invisible title" style="margin: 4px;">An active connection to the internet is required to verify your license.</div>
+                              <div id="apiError" class="invisible title" style="margin: 4px;"></div>
+                           </div>
+                        </div>
+                        <div style="flex: 11"></div>
+                     </div>
+                  </div>
+               </div>
+            
+
+                  <div id="greyOut" class="greyed invisible">
+                  </div>
+                  <div class="horizFlex" style="height: 16px; margin: 6px 0 3px;">
+                     <div class="title" style="flex: 30">Style:</div>
+                     <div class="horizFlex" style="flex: 30; justify-content: flex-end;">
+                        <div class="title" id="styleMinus" style="flex: 0 0 14px; margin-right: 5px; justify-content: right;">
+                           <svg id="leftArrow" class="styleArrows fillPossible" width="100%" height="100%" viewBox="0 7 129 129">
+                              <path d="M114.2,112.5L15.7,64l98.5-48.5V112.5z"/>
+                           </svg>
+                        </div>
+                        <div class="title" id="stylePlus" style="flex: 0 0 14px; margin-right: 18px;">
+                           <svg id="rightArrow" class="styleArrows fillPossible" width="100%" height="100%" viewBox="0 7 129 129">
+                              <path d="M15.7,15.5L114.2,64l-98.5,48.5V15.5z"/>
+                           </svg>
+                        </div>
+                     </div>
+                     <div class="title" style="flex: 60; position: relative; z-index: 4">Settings:</div>
+                  </div>
+
+                  <div class="horizFlex" style="height: 30px">
+                     <div id="dropdown" class="horizFlex" id="dropdown" style-number="0" style-hold="0" style="flex: 1">
+                        <div class="lightSample currentImage" id="grungeCurrentValue" image-hold="grainy" image-current="grainy" style="flex: 1; background-image: url(images/grainy.png);"></div>
+                        <div class="darkSample currentImage" id="grungeCurrentValueDark" image-hold="grainy" image-current="grainy" style="flex: 1; background-image: url(images/grainyDark.png);"></div>
+                        <div id="arrowDrop" style="flex: 0 0 15px; margin-right: 5px;">
+                           <svg id="downArrow" class="fillPossible" width="100%" height="100%" viewBox="0 0 12 50">
+                              <path d="M9.521,21.647l1.593,1.593L6,28.353l-5.114-5.114l1.593-1.593L6,25.168L9.521,21.647z"/>
+                           </svg>
+                           <svg id="upArrow" class="fillPossible invisible" width="100%" height="100%" viewBox="0 0 12 50">
+                              <path d="M2.48,28.35l-1.59-1.59L6,21.65l5.11,5.11l-1.59,1.59L6,24.83L2.48,28.35z"/>
+                           </svg>
+                        </div>
+                     </div>
+                     <div class="horizFlex settingsButtons" style="flex: 1; position: relative; z-index: 4">
+                        <div class="greyText" id="copy" style="flex: 1; border-right: 0;">Copy</div>
+                        <div class="greyText invisible" id="refresh" style="flex: 1; border-right: 0; z-index: 4; position: relative;">Refresh</div>
+                        <div class="greyText" id="paste" style="flex: 1">Paste</div>
+                        <div class="greyText" id="reset" style="flex: 1; border-left: 0;">Reset</div>
+                     </div>
+                  </div>
+
+
+                  
+
+
+                  <div style="margin-top: 10px">
+                     <span class="title topMoveLess">Scale:</span>
+                     <div class="horizFlex"><sp-slider id="effectScale" class="generalSlider" show-value="false" min="25" max="300" value="100" data-value="100"></sp-slider><span id="effectScaleValue" class="title topMove">100</span></div>
+
+                     <span class="title topMoveLess">Shape Melt:</span>
+                     <div class="horizFlex"><sp-slider id="refill" class="generalSlider" show-value="false" min="0" max="100" value="25" data-value="25"></sp-slider><span id="refillValue" class="title topMove">25</span></div>
+
+                     <span class="title topMoveLess">Shape Distress:</span>
+                     <div class="horizFlex"><sp-slider id="blurMain" class="generalSlider" show-value="false" min="0" max="100" value="50" data-value="50"></sp-slider><span id="blurMainValue" class="title topMove">50</span></div>
+
+                     <span class="title topMoveLess">Shape Choker:</span>
+                     <div class="horizFlex"><sp-slider id="bleed" class="generalSlider" show-value="false" min="-20" max="20" value="0" data-value="0"></sp-slider><span id="bleedValue" class="title topMove">0</span></div>
+
+                     <span class="title topMoveLess">Inner Distress:</span>
+                     <div class="horizFlex"><sp-slider id="innerTexture" class="generalSlider" show-value="false" min="0" max="100" value="50" data-value="50"></sp-slider><span id="innerTextureValue" class="title topMove">50</span></div>
+
+                     <span class="title topMoveLess">Inner Edge Size:</span>
+                     <div class="horizFlex"><sp-slider id="edgeSize" class="generalSlider" show-value="false" min="0" max="100" value="10" data-value="10"></sp-slider><span id="edgeSizeValue" class="title topMove">10</span></div>
+
+                     <span class="title topMoveLess">Fade Amount:</span>
+                     <div class="horizFlex"><sp-slider id="fade" class="generalSlider" show-value="false" min="0" max="100" value="25" data-value="25"></sp-slider><span id="fadeValue" class="title topMove">25</span></div>
+
+                     <span class="title topMoveLess" id="overlay" style-number="0" style-hold="0">Fade Style:</span>
+                     
+
+                     <div class="horizFlex" style="justify-content: space-between; margin: 6px 0px 15px">
+                        <div id="print" style-number="0" class="title overlayStyle greyText copyPasteGo">Print</div>
+                        <div id="grunge" style-number="1" class="title overlayStyle greyText" style="border-right: 0; border-left: 0">Grunge</div>
+                        <div id="grain" style-number="2" class="title overlayStyle greyText">Grain</div>
+                        <div id="dust" style-number="3" class="title overlayStyle greyText" style="border-right: 0; border-left: 0">Dust</div>
+                        <div id="paint" style-number="4" class="title overlayStyle greyText">Paint</div>
+                     </div>
+
+
+
+                     <span class="title topMoveLess">Random Seed:</span>
+                     <div class="horizFlex"><sp-slider id="randomNumber" class="generalSlider" show-value="false" min="0" max="25" value="0" data-value="0"></sp-slider><span id="randomNumberValue" class="title topMove">0</span></div>
+
+                  </div>
+
+                  <div class="notices">
+                     <div class="copyright"><a href="https://www.texturelabs.org/">Texturelabs</a> © <span id="year">2024</span></div>
+                  </div>
+            </div>
+         </div>
+
+         
+         <div id="presetMenu" class="presetsMenu invisible">
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="grainy" style-number="0"><img src="images/grainy.png" class="lightSample"><img src="images/grainyDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="rolled" style-number="1"><img src="images/rolled.png" class="lightSample"><img src="images/rolledDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="stamp" style-number="2"><img src="images/stamp.png" class="lightSample"><img src="images/stampDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="rough" style-number="3"><img src="images/rough.png" class="lightSample"><img src="images/roughDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="perlin" style-number="4"><img src="images/perlin.png" class="lightSample"><img src="images/perlinDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="block" style-number="5"><img src="images/block.png" class="lightSample"><img src="images/blockDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="press" style-number="6"><img src="images/press.png" class="lightSample"><img src="images/pressDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="vintage" style-number="7"><img src="images/vintage.png" class="lightSample"><img src="images/vintageDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="news" style-number="8"><img src="images/news.png" class="lightSample"><img src="images/newsDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="spray" style-number="9"><img src="images/spray.png" class="lightSample"><img src="images/sprayDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="inked" style-number="10"><img src="images/inked.png" class="lightSample"><img src="images/inkedDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="copier" style-number="11"><img src="images/copier.png" class="lightSample"><img src="images/copierDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="weather" style-number="12"><img src="images/weather.png" class="lightSample"><img src="images/weatherDark.png" class="darkSample"></div>
+            </div>
+            <div class="horizFlex grungeDiv">
+               <div class="flexOne grungeStyle" id="halftone" style-number="13"><img src="images/halftone.png" class="lightSample"><img src="images/halftoneDark.png" class="darkSample"></div>
+            </div>
+         </div>
+
+      </div>
+   </div>
+</body>
+
+
+
+
+
+
+</html>

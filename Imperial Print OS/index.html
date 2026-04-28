@@ -4,63 +4,106 @@
     <meta charset="UTF-8" />
     <title>Imperial Print OS</title>
     <link rel="stylesheet" href="./styles.css" />
+    <script src="./index.js" defer></script>
   </head>
   <body>
-    <h1>Imperial Print OS</h1>
+    <main class="app">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Imperial Infusions</p>
+          <h1>Print OS</h1>
+        </div>
+        <div class="version-pill">v0.2.0</div>
+      </header>
 
-    <div class="card">
-      <h2>Prep</h2>
+      <section class="panel-card">
+        <div class="section-header">
+          <div>
+            <h2>Prep</h2>
+            <p>Build/update PRINT_PREP from selected ORIGINAL artwork.</p>
+          </div>
+        </div>
 
-      <label>Garment</label>
-      <select id="garment">
-        <option value="tee">tee</option>
-        <option value="hoodie">hoodie</option>
-        <option value="tote">tote</option>
-        <option value="denim_jacket">denim_jacket</option>
-        <option value="jeans">jeans</option>
-      </select>
+        <label for="garment">Garment</label>
+        <select id="garment">
+          <option value="tee">Tee</option>
+          <option value="hoodie">Hoodie</option>
+          <option value="tote">Tote</option>
+          <option value="denim_jacket">Denim Jacket</option>
+          <option value="jeans">Jeans</option>
+        </select>
 
-      <label>Zone</label>
-      <select id="zone">
-        <option value="full_front">full_front</option>
-        <option value="full_back">full_back</option>
-        <option value="left_chest">left_chest</option>
-        <option value="sleeve_left">sleeve_left</option>
-        <option value="sleeve_right">sleeve_right</option>
-      </select>
+        <label for="zone">Print Zone</label>
+        <select id="zone">
+          <option value="full_front">Full Front</option>
+          <option value="full_back">Full Back</option>
+          <option value="left_chest">Left Chest</option>
+          <option value="sleeve_left">Left Sleeve</option>
+          <option value="sleeve_right">Right Sleeve</option>
+        </select>
 
-      <label>Ink Profile</label>
-      <select id="ink">
-        <option value="1c_dark">1c_dark</option>
-        <option value="4c_dark">4c_dark</option>
-      </select>
+        <label for="ink">Ink Profile</label>
+        <select id="ink">
+          <option value="1c_dark">1 Colour on Dark</option>
+          <option value="2c_dark">2 Colour on Dark</option>
+          <option value="3c_dark">3 Colour on Dark</option>
+          <option value="4c_dark">4 Colour on Dark</option>
+        </select>
 
-      <button id="runPrep">Run Prep on Selected Layer</button>
-    </div>
+        <label for="printSetup">Print Setup Preset</label>
+        <select id="printSetup">
+          <option value="a3_positive_300">A3 Positive — 300 DPI</option>
+          <option value="a4_tile_300">A4 Tiled Positive — 300 DPI</option>
+          <option value="oversize_back_300">
+            Oversize Back Print — 300 DPI
+          </option>
+          <option value="chest_badge_300">Chest Badge — 300 DPI</option>
+          <option value="sleeve_print_300">Sleeve Print — 300 DPI</option>
+        </select>
 
-    <div class="card">
-      <h2>Distress (UI scaffold)</h2>
+        <div class="button-row">
+          <button id="runPrep" class="primary-btn">Run Prep</button>
+          <button id="rebuildPrep" class="secondary-btn">
+            Rebuild from Original
+          </button>
+        </div>
+      </section>
 
-      <label>Distress Level</label>
-      <select id="distressLevel">
-        <option value="level_0_clean">Level 0 — Clean</option>
-        <option value="level_1_faded">Level 1 — Faded</option>
-        <option value="level_2_worn">Level 2 — Worn</option>
-        <option value="level_3_distressed">Level 3 — Distressed</option>
-      </select>
+      <section class="panel-card">
+        <div class="section-header">
+          <div>
+            <h2>Distress</h2>
+            <p>
+              Level naming only (collection logic can be warning-only later).
+            </p>
+          </div>
+        </div>
 
-      <label>Amount</label>
-      <input id="amount" type="range" min="0" max="100" value="50" />
-      <div id="amountValue">50</div>
+        <label for="distressLevel">Distress Level</label>
+        <select id="distressLevel">
+          <option value="level_0_clean">Level 0 — Clean</option>
+          <option value="level_1_faded">Level 1 — Faded</option>
+          <option value="level_2_worn">Level 2 — Worn</option>
+          <option value="level_3_distressed">Level 3 — Distressed</option>
+        </select>
 
-      <button id="previewDistress">Preview Distress Settings</button>
-    </div>
+        <label for="amount">Amount</label>
+        <input id="amount" type="range" min="0" max="100" value="50" />
+        <div class="range-readout">
+          <span>0</span><strong id="amountValue">50</strong><span>100</span>
+        </div>
 
-    <div class="card">
-      <h2>Status</h2>
-      <pre id="out">Ready.</pre>
-    </div>
+        <button id="previewDistress" class="secondary-btn">
+          Preview Distress
+        </button>
+      </section>
 
-    <script src="./index.js"></script>
+      <section class="panel-card">
+        <div class="section-header compact">
+          <h2>Status</h2>
+        </div>
+        <pre id="out">Ready.</pre>
+      </section>
+    </main>
   </body>
 </html>
