@@ -390,6 +390,167 @@ async function createRegistrationMarks(doc, prepRoot, constants, setup) {
   await action.batchPlay(commands, { synchronousExecution: true });
 }
 
+function addRectangleOutline(commands, left, top, right, bottom, stroke) {
+  commands.push(rectSelectionCommand(left, top, right, top + stroke));
+  commands.push(fillBlackCommand());
+
+  commands.push(rectSelectionCommand(left, bottom - stroke, right, bottom));
+  commands.push(fillBlackCommand());
+
+  commands.push(rectSelectionCommand(left, top, left + stroke, bottom));
+  commands.push(fillBlackCommand());
+
+  commands.push(rectSelectionCommand(right - stroke, top, right, bottom));
+  commands.push(fillBlackCommand());
+}
+
+async function createPlacementGuides(doc, prepRoot, constants, zonePreset) {
+  const guidesGroup = await getOrCreateChildGroup(
+    doc,
+    prepRoot,
+    "01_PLACEMENT_GUIDES",
+    constants,
+  );
+
+  await clearGroupChildren(guidesGroup);
+
+  await action.batchPlay(
+    [
+      {
+        _obj: "make",
+        _target: [
+          {
+            _ref: "layer",
+          },
+        ],
+        using: {
+          _obj: "layer",
+          name: `PLACEMENT_GUIDES__${safeTag(jobState.zone)}`,
+        },
+        _isCommand: true,
+      },
+    ],
+    { synchronousExecution: true },
+  );
+
+  const guideLayer = app.activeDocument.activeLayers[0];
+  guideLayer.visible = true;
+  guideLayer.move(guidesGroup, constants.ElementPlacement.PLACEINSIDE);
+
+  const docW = toNumber(doc.width);
+  const docH = toNumber(doc.height);
+
+  const centreX = docW * (zonePreset.positionX / 100);
+  const centreY = docH * (zonePreset.positionY / 100);
+
+  const boxW = zonePreset.artworkMaxWidth;
+  const boxH = zonePreset.artworkMaxHeight;
+
+  const left = centreX - boxW / 2;
+  const right = centreX + boxW / 2;
+  const top = centreY - boxH / 2;
+  const bottom = centreY + boxH / 2;
+
+  const guideStroke = 5;
+  const safeStroke = 4;
+  const tapeStroke = 3;
+  const centreStroke = 4;
+
+  const commands = [];
+
+  // MAX BOUNDARY (existing)
+  addRectangleOutline(commands, left, top, right, bottom, guideStroke);
+
+  // SAFE AREA (slightly inside)
+  const safeMargin = 0.9; // 90%
+  const safeW = boxW * safeMargin;
+  const safeH = boxH * safeMargin;
+
+  const safeLeft = centreX - safeW / 2;
+  const safeRight = centreX + safeW / 2;
+  const safeTop = centreY - safeH / 2;
+  const safeBottom = centreY + safeH / 2;
+
+  addRectangleOutline(
+    commands,
+    safeLeft,
+    safeTop,
+    safeRight,
+    safeBottom,
+    safeStroke,
+  );
+
+  // TAPE / FRAME MARGIN (bigger than artwork)
+  const tapePadding = 120; // px – adjustable later
+
+  addRectangleOutline(
+    commands,
+    left - tapePadding,
+    top - tapePadding,
+    right + tapePadding,
+    bottom + tapePadding,
+    tapeStroke,
+  );
+  commands.push(
+    rectSelectionCommand(
+      centreX - centreStroke / 2,
+      0,
+      centreX + centreStroke / 2,
+      docH,
+    ),
+  );
+  commands.push(fillBlackCommand());
+
+  commands.push(
+    rectSelectionCommand(
+      0,
+      centreY - centreStroke / 2,
+      docW,
+      centreY + centreStroke / 2,
+    ),
+  );
+  commands.push(fillBlackCommand());
+
+  commands.push(deselectCommand());
+
+  await action.batchPlay(commands, { synchronousExecution: true });
+
+  guidesGroup.visible = false;
+}
+
+async function createJobInfo(doc, prepRoot, constants, setup, zonePreset) {
+  const infoGroup = await getOrCreateChildGroup(
+    doc,
+    prepRoot,
+    "00_JOB_INFO",
+    constants,
+  );
+
+  await clearGroupChildren(infoGroup);
+
+  const timestamp = new Date()
+    .toISOString()
+    .replace("T", "__")
+    .replace(/:/g, "-")
+    .replace(/\..+$/, "");
+
+  const infoNames = [
+    `INFO__GARMENT__${safeTag(jobState.garment)}`,
+    `INFO__ZONE__${safeTag(zonePreset.label)}`,
+    `INFO__INK__${safeTag(jobState.ink)}`,
+    `INFO__SETUP__${safeTag(setup.label)}`,
+    `INFO__DISTRESS__${safeTag(jobState.distressLevel)}`,
+    `INFO__ARTWORK_MAX__${zonePreset.artworkMaxWidth}x${zonePreset.artworkMaxHeight}px`,
+    `INFO__GENERATED__${timestamp}`,
+  ];
+
+  for (const name of infoNames) {
+    await createChildGroup(doc, infoGroup, name, constants);
+  }
+
+  infoGroup.visible = false;
+}
+
 async function runPrep({ rebuild }) {
   syncJobState();
 
@@ -421,6 +582,8 @@ async function runPrep({ rebuild }) {
 
       const prepRoot = await getOrCreateRootPrep(doc);
       await createRegistrationMarks(doc, prepRoot, constants, setup);
+      await createPlacementGuides(doc, prepRoot, constants, zonePreset);
+      await createJobInfo(doc, prepRoot, constants, setup, zonePreset);
 
       const working = await createFreshWorkingGroup(doc, prepRoot, constants);
 
@@ -518,8 +681,9 @@ artwork max: ${zonePreset.artworkMaxWidth} x ${zonePreset.artworkMaxHeight}
 registration: ${setup.registrationSize}px / stroke ${setup.registrationStroke}px
 root: PRINT_PREP
 marks: 02_REGISTRATION_MARKS
+guides: 01_PLACEMENT_GUIDES hidden by default
 working: ${prepWorkingName()}
-mode: film marks + zone placement`,
+mode: film marks + zone placement guides`,
   );
 }
 
