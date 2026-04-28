@@ -10,34 +10,55 @@ let amountValue = null;
 const printSetupPresets = {
   a3_positive_300: {
     label: "A3 Positive — 300 DPI",
+    registrationOffset: 160,
+    registrationSize: 150,
+    registrationStroke: 10,
+  },
+  a4_positive_300: {
+    label: "A4 Positive — 300 DPI",
+    registrationOffset: 130,
+    registrationSize: 135,
+    registrationStroke: 9,
+  },
+  a4_tiled_300: {
+    label: "A4 Tiled Positive — 300 DPI",
+    registrationOffset: 130,
+    registrationSize: 135,
+    registrationStroke: 9,
+  },
+};
+
+const zonePresets = {
+  full_front: {
+    label: "Full Front",
     artworkMaxWidth: 2800,
     artworkMaxHeight: 4300,
     positionX: 50,
     positionY: 48,
   },
-  a4_tile_300: {
-    label: "A4 Tiled Positive — 300 DPI",
-    artworkMaxWidth: 2100,
-    artworkMaxHeight: 3000,
-    positionX: 50,
-    positionY: 48,
-  },
-  oversize_back_300: {
-    label: "Oversize Back Print — 300 DPI",
+  full_back: {
+    label: "Full Back",
     artworkMaxWidth: 3200,
     artworkMaxHeight: 4400,
     positionX: 50,
     positionY: 46,
   },
-  chest_badge_300: {
-    label: "Chest Badge — 300 DPI",
+  left_chest: {
+    label: "Left Chest",
     artworkMaxWidth: 900,
     artworkMaxHeight: 900,
     positionX: 50,
     positionY: 32,
   },
-  sleeve_print_300: {
-    label: "Sleeve Print — 300 DPI",
+  sleeve_left: {
+    label: "Left Sleeve",
+    artworkMaxWidth: 850,
+    artworkMaxHeight: 2200,
+    positionX: 50,
+    positionY: 46,
+  },
+  sleeve_right: {
+    label: "Right Sleeve",
     artworkMaxWidth: 850,
     artworkMaxHeight: 2200,
     positionX: 50,
@@ -95,13 +116,31 @@ function getActivePrintSetup() {
   );
 }
 
+function getActiveZonePreset() {
+  return zonePresets[jobState.zone] || zonePresets.full_front;
+}
+
 function prepWorkingName() {
-  return `03_ARTWORK_WORKING__${safeTag(jobState.garment)}__${safeTag(jobState.zone)}__${safeTag(jobState.ink)}__${safeTag(jobState.printSetup)}__${safeTag(jobState.distressLevel)}`;
+  return `03_ARTWORK_WORKING__${safeTag(jobState.garment)}__${safeTag(
+    jobState.zone,
+  )}__${safeTag(jobState.ink)}__${safeTag(jobState.printSetup)}__${safeTag(
+    jobState.distressLevel,
+  )}`;
 }
 
 function isPrepLayerName(name) {
   const n = String(name || "");
-  return n.includes("__PREP__") || n.includes("PLACEMENT_WORKING");
+  return (
+    n === "PRINT_PREP" ||
+    n.includes("__PREP__") ||
+    n.includes("PLACEMENT_WORKING") ||
+    n.includes("REGISTRATION_MARKS") ||
+    n.startsWith("00_JOB_INFO") ||
+    n.startsWith("01_PLACEMENT_GUIDES") ||
+    n.startsWith("02_REGISTRATION_MARKS") ||
+    n.startsWith("03_ARTWORK_WORKING__") ||
+    n.startsWith("03_DISTRESS_WORKING__")
+  );
 }
 
 async function findTopGroupByName(doc, name) {
@@ -138,14 +177,51 @@ async function getOrCreateChildGroup(doc, parentGroup, name, constants) {
   return await createChildGroup(doc, parentGroup, name, constants);
 }
 
-async function removeGroupChildren(group) {
+async function deleteLayerById(layerId) {
+  await action.batchPlay(
+    [
+      {
+        _obj: "delete",
+        _target: [
+          {
+            _ref: "layer",
+            _id: layerId,
+          },
+        ],
+        _isCommand: true,
+      },
+    ],
+    { synchronousExecution: true },
+  );
+}
+
+async function clearGroupChildren(group) {
   const children = group.layers ? [...group.layers] : [];
-  for (const c of children) {
-    await c.delete();
+
+  for (const child of children) {
+    await deleteLayerById(child.id);
   }
 }
 
-async function getOrCreateWorkingGroup(doc, prepRoot, constants) {
+async function findExistingWorkingGroup(prepRoot) {
+  const children = prepRoot.layers ? [...prepRoot.layers] : [];
+
+  for (const child of children) {
+    const name = String(child.name || "");
+
+    if (
+      name.startsWith("03_ARTWORK_WORKING__") ||
+      name.startsWith("03_DISTRESS_WORKING__") ||
+      name === "03_DISTRESS_WORKING"
+    ) {
+      return child;
+    }
+  }
+
+  return null;
+}
+
+async function createFreshWorkingGroup(doc, prepRoot, constants) {
   await getOrCreateChildGroup(doc, prepRoot, "00_JOB_INFO", constants);
   await getOrCreateChildGroup(doc, prepRoot, "01_PLACEMENT_GUIDES", constants);
   await getOrCreateChildGroup(
@@ -155,32 +231,163 @@ async function getOrCreateWorkingGroup(doc, prepRoot, constants) {
     constants,
   );
 
-  let working = null;
-  const kids = prepRoot.layers || [];
-  for (const k of kids) {
-    if (k.kind !== "group") continue;
-    if (
-      k.name.startsWith("03_ARTWORK_WORKING__") ||
-      k.name.startsWith("03_DISTRESS_WORKING__") ||
-      k.name === "03_DISTRESS_WORKING"
-    ) {
-      working = k;
-      break;
-    }
+  const existingWorking = await findExistingWorkingGroup(prepRoot);
+
+  if (existingWorking) {
+    existingWorking.name = prepWorkingName();
+    await clearGroupChildren(existingWorking);
+    return existingWorking;
   }
 
-  if (!working) {
-    working = await createChildGroup(
-      doc,
-      prepRoot,
-      prepWorkingName(),
-      constants,
-    );
-  } else {
-    working.name = prepWorkingName();
-  }
+  return await createChildGroup(doc, prepRoot, prepWorkingName(), constants);
+}
 
-  return working;
+function rectSelectionCommand(left, top, right, bottom) {
+  return {
+    _obj: "set",
+    _target: [
+      {
+        _ref: "channel",
+        _property: "selection",
+      },
+    ],
+    to: {
+      _obj: "rectangle",
+      top: {
+        _unit: "pixelsUnit",
+        _value: top,
+      },
+      left: {
+        _unit: "pixelsUnit",
+        _value: left,
+      },
+      bottom: {
+        _unit: "pixelsUnit",
+        _value: bottom,
+      },
+      right: {
+        _unit: "pixelsUnit",
+        _value: right,
+      },
+    },
+    _isCommand: true,
+  };
+}
+
+function fillBlackCommand() {
+  return {
+    _obj: "fill",
+    using: {
+      _enum: "fillContents",
+      _value: "black",
+    },
+    opacity: {
+      _unit: "percentUnit",
+      _value: 100,
+    },
+    mode: {
+      _enum: "blendMode",
+      _value: "normal",
+    },
+    _isCommand: true,
+  };
+}
+
+function deselectCommand() {
+  return {
+    _obj: "set",
+    _target: [
+      {
+        _ref: "channel",
+        _property: "selection",
+      },
+    ],
+    to: {
+      _enum: "ordinal",
+      _value: "none",
+    },
+    _isCommand: true,
+  };
+}
+
+function addCross(commands, cx, cy, size, stroke) {
+  const half = size / 2;
+  const halfStroke = stroke / 2;
+
+  commands.push(
+    rectSelectionCommand(
+      cx - half,
+      cy - halfStroke,
+      cx + half,
+      cy + halfStroke,
+    ),
+  );
+  commands.push(fillBlackCommand());
+
+  commands.push(
+    rectSelectionCommand(
+      cx - halfStroke,
+      cy - half,
+      cx + halfStroke,
+      cy + half,
+    ),
+  );
+  commands.push(fillBlackCommand());
+}
+
+async function createRegistrationMarks(doc, prepRoot, constants, setup) {
+  const regGroup = await getOrCreateChildGroup(
+    doc,
+    prepRoot,
+    "02_REGISTRATION_MARKS",
+    constants,
+  );
+
+  await clearGroupChildren(regGroup);
+
+  await action.batchPlay(
+    [
+      {
+        _obj: "make",
+        _target: [
+          {
+            _ref: "layer",
+          },
+        ],
+        using: {
+          _obj: "layer",
+          name: `REGISTRATION_MARKS__${safeTag(jobState.printSetup)}`,
+        },
+        _isCommand: true,
+      },
+    ],
+    { synchronousExecution: true },
+  );
+
+  const regLayer = app.activeDocument.activeLayers[0];
+  regLayer.visible = true;
+  regLayer.move(regGroup, constants.ElementPlacement.PLACEINSIDE);
+
+  const docW = toNumber(doc.width);
+  const docH = toNumber(doc.height);
+
+  const offset = setup.registrationOffset || 150;
+  const size = setup.registrationSize || 120;
+  const stroke = setup.registrationStroke || 8;
+
+  const commands = [];
+
+  addCross(commands, offset, offset, size, stroke);
+  addCross(commands, docW - offset, offset, size, stroke);
+  addCross(commands, offset, docH - offset, size, stroke);
+  addCross(commands, docW - offset, docH - offset, size, stroke);
+
+  addCross(commands, docW / 2, offset, size * 0.75, stroke);
+  addCross(commands, docW / 2, docH - offset, size * 0.75, stroke);
+
+  commands.push(deselectCommand());
+
+  await action.batchPlay(commands, { synchronousExecution: true });
 }
 
 async function runPrep({ rebuild }) {
@@ -190,6 +397,7 @@ async function runPrep({ rebuild }) {
   const zone = jobState.zone;
   const ink = jobState.ink;
   const setup = getActivePrintSetup();
+  const zonePreset = getActiveZonePreset();
 
   await core.executeAsModal(
     async () => {
@@ -204,27 +412,17 @@ async function runPrep({ rebuild }) {
       for (const s of selectedLayers) {
         if (isPrepLayerName(s.name)) {
           throw new Error(
-            "You selected a PREP output layer. Select ORIGINAL artwork layer(s) first.",
+            "You selected a PREP output layer/group. Select ORIGINAL artwork layer(s) first.",
           );
         }
       }
 
       const constants = photoshop.constants;
 
-      // Duplicate first (so rebuild clear never deletes source before copy)
-      const incoming = [];
-      for (const s of selectedLayers) {
-        const dup = await s.duplicate();
-        dup.name = `${s.name}__PREP__${garment}__${zone}__${ink}__${jobState.distressLevel}`;
-        incoming.push(dup);
-      }
-
-      // Build/rebuild working container
       const prepRoot = await getOrCreateRootPrep(doc);
-      const working = await getOrCreateWorkingGroup(doc, prepRoot, constants);
+      await createRegistrationMarks(doc, prepRoot, constants, setup);
 
-      // Clear previous working content on both Run and Rebuild (single-source behavior)
-      await removeGroupChildren(working);
+      const working = await createFreshWorkingGroup(doc, prepRoot, constants);
 
       const placement = await createChildGroup(
         doc,
@@ -233,11 +431,14 @@ async function runPrep({ rebuild }) {
         constants,
       );
 
-      for (const dup of incoming) {
+      for (const s of selectedLayers) {
+        const dup = await s.duplicate();
+
+        dup.name = `${s.name}__PREP__${garment}__${zone}__${ink}__${jobState.distressLevel}`;
+        dup.visible = true;
         dup.move(placement, constants.ElementPlacement.PLACEINSIDE);
       }
 
-      // Scale + place
       const b = placement.bounds;
       const left = toNumber(b.left);
       const right = toNumber(b.right);
@@ -251,15 +452,15 @@ async function runPrep({ rebuild }) {
         const docW = toNumber(doc.width);
         const docH = toNumber(doc.height);
 
-        const scaleByW = setup.artworkMaxWidth / w;
-        const scaleByH = setup.artworkMaxHeight / h;
+        const scaleByW = zonePreset.artworkMaxWidth / w;
+        const scaleByH = zonePreset.artworkMaxHeight / h;
         const scalePercent = Math.min(scaleByW, scaleByH) * 100;
 
         const curCX = left + w / 2;
         const curCY = top + h / 2;
 
-        const targetCX = docW * (setup.positionX / 100);
-        const targetCY = docH * (setup.positionY / 100);
+        const targetCX = docW * (zonePreset.positionX / 100);
+        const targetCY = docH * (zonePreset.positionY / 100);
 
         const dx = targetCX - curCX;
         const dy = targetCY - curCY;
@@ -299,7 +500,6 @@ async function runPrep({ rebuild }) {
         );
       }
 
-      // Hide original selected source
       for (const s of selectedLayers) {
         s.visible = false;
       }
@@ -310,13 +510,16 @@ async function runPrep({ rebuild }) {
   setStatus(
     `${rebuild ? "Rebuild complete ✅" : "Prep complete ✅"}
 garment: ${jobState.garment}
-zone: ${jobState.zone}
+zone: ${zonePreset.label}
 ink: ${jobState.ink}
 distress: ${jobState.distressLevel}
 print setup: ${setup.label}
+artwork max: ${zonePreset.artworkMaxWidth} x ${zonePreset.artworkMaxHeight}
+registration: ${setup.registrationSize}px / stroke ${setup.registrationStroke}px
 root: PRINT_PREP
+marks: 02_REGISTRATION_MARKS
 working: ${prepWorkingName()}
-mode: single working group, replaced each run`,
+mode: film marks + zone placement`,
   );
 }
 
@@ -341,6 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const runPrepBtn = document.getElementById("runPrep");
+  const toggleBtn = document.getElementById("toggleOriginals");
   const rebuildBtn = document.getElementById("rebuildPrep");
   const previewBtn = document.getElementById("previewDistress");
 
@@ -373,10 +577,57 @@ document.addEventListener("DOMContentLoaded", () => {
       syncJobState();
       const val = amount ? amount.value : "n/a";
       setStatus(
-        `Distress preview\nlevel: ${jobState.distressLevel}\namount: ${val}`,
+        `Distress preview
+level: ${jobState.distressLevel}
+amount: ${val}`,
       );
     });
   }
 
-  setStatus("Ready. Select ORIGINAL artwork layers, then Run Prep.");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", async () => {
+      try {
+        await core.executeAsModal(async () => {
+          const doc = app.activeDocument;
+          if (!doc) return;
+
+          const allLayers = doc.layers || [];
+
+          function isPrep(name) {
+            return (
+              name === "PRINT_PREP" ||
+              name.includes("__PREP__") ||
+              name.includes("PLACEMENT_WORKING") ||
+              name.includes("REGISTRATION_MARKS") ||
+              name.startsWith("00_") ||
+              name.startsWith("01_") ||
+              name.startsWith("02_") ||
+              name.startsWith("03_")
+            );
+          }
+
+          async function toggleGroup(layers) {
+            for (const layer of layers) {
+              if (layer.kind === "group") {
+                await toggleGroup(layer.layers || []);
+                continue;
+              }
+
+              if (!isPrep(layer.name)) {
+                layer.visible = !layer.visible;
+              }
+            }
+          }
+
+          await toggleGroup(allLayers);
+        });
+
+        setStatus("Toggled original layer visibility");
+      } catch (e) {
+        setStatus(`Toggle failed ❌\n${e.message}`);
+      }
+    });
+  }
+
+  setStatus("Ready. Select ORIGINAL artwork layer(s), then run prep.");
 });

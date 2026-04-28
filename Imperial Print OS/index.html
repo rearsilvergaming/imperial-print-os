@@ -53,17 +53,26 @@
         <label for="printSetup">Print Setup Preset</label>
         <select id="printSetup">
           <option value="a3_positive_300">A3 Positive — 300 DPI</option>
-          <option value="a4_tile_300">A4 Tiled Positive — 300 DPI</option>
-          <option value="oversize_back_300">
-            Oversize Back Print — 300 DPI
-          </option>
-          <option value="chest_badge_300">Chest Badge — 300 DPI</option>
-          <option value="sleeve_print_300">Sleeve Print — 300 DPI</option>
+          <option value="a4_positive_300">A4 Positive — 300 DPI</option>
+          <option value="a4_tiled_300">A4 Tiled Positive — 300 DPI</option>
         </select>
 
         <div class="button-row">
-          <button id="runPrep" class="primary-btn">Run Prep</button>
-          <button id="rebuildPrep" class="secondary-btn">
+          <button
+            id="runPrep"
+            class="primary-btn"
+            style="display: block; min-height: 34px"
+          >
+            Run Prep
+          </button>
+          <button id="toggleOriginals" class="secondary-btn">
+            Toggle Originals Visibility
+          </button>
+          <button
+            id="rebuildPrep"
+            class="secondary-btn"
+            style="display: block; min-height: 34px"
+          >
             Rebuild from Original
           </button>
         </div>
