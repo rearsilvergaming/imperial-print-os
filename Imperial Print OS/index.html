@@ -57,13 +57,26 @@
           <option value="a4_tiled_300">A4 Tiled Positive — 300 DPI</option>
         </select>
 
+        <label for="meshProfile">Mesh Profile</label>
+        <select id="meshProfile">
+          <option value="43t_standard">43T — Standard / Bold Detail</option>
+          <option value="55t_detail">55T — Medium Detail</option>
+          <option value="77t_fine">77T — Fine Detail</option>
+        </select>
+
         <div class="button-row">
+          <button id="runPreflight" class="secondary-btn">
+            Run Preflight Check
+          </button>
           <button
             id="runPrep"
             class="primary-btn"
             style="display: block; min-height: 34px"
           >
             Run Prep
+          </button>
+          <button id="validatePrint" class="secondary-btn">
+            Validate Print Output
           </button>
           <button id="toggleOriginals" class="secondary-btn">
             Toggle Originals Visibility

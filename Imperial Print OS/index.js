@@ -66,11 +66,30 @@ const zonePresets = {
   },
 };
 
+const meshProfiles = {
+  "43t_standard": {
+    label: "43T — Standard / Bold Detail",
+    minLinePx: 5,
+    minTextHeightPx: 45,
+  },
+  "55t_detail": {
+    label: "55T — Medium Detail",
+    minLinePx: 4,
+    minTextHeightPx: 36,
+  },
+  "77t_fine": {
+    label: "77T — Fine Detail",
+    minLinePx: 3,
+    minTextHeightPx: 28,
+  },
+};
+
 const jobState = {
   garment: "tee",
   zone: "full_front",
   ink: "1c_dark",
   printSetup: "a3_positive_300",
+  meshProfile: "43t_standard",
   distressLevel: "level_0_clean",
 };
 
@@ -104,6 +123,7 @@ function syncJobState() {
   jobState.zone = readSelectValue("zone", jobState.zone);
   jobState.ink = readSelectValue("ink", jobState.ink);
   jobState.printSetup = readSelectValue("printSetup", jobState.printSetup);
+  jobState.meshProfile = readSelectValue("meshProfile", jobState.meshProfile);
   jobState.distressLevel = readSelectValue(
     "distressLevel",
     jobState.distressLevel,
@@ -118,6 +138,18 @@ function getActivePrintSetup() {
 
 function getActiveZonePreset() {
   return zonePresets[jobState.zone] || zonePresets.full_front;
+}
+
+function getInkScreenCount(ink) {
+  if (ink === "1c_dark") return 1;
+  if (ink === "2c_dark") return 2;
+  if (ink === "3c_dark") return 3;
+  if (ink === "4c_dark") return 4;
+  return 0;
+}
+
+function getActiveMeshProfile() {
+  return meshProfiles[jobState.meshProfile] || meshProfiles["43t_standard"];
 }
 
 function prepWorkingName() {
@@ -458,11 +490,9 @@ async function createPlacementGuides(doc, prepRoot, constants, zonePreset) {
 
   const commands = [];
 
-  // MAX BOUNDARY (existing)
   addRectangleOutline(commands, left, top, right, bottom, guideStroke);
 
-  // SAFE AREA (slightly inside)
-  const safeMargin = 0.9; // 90%
+  const safeMargin = 0.95;
   const safeW = boxW * safeMargin;
   const safeH = boxH * safeMargin;
 
@@ -480,8 +510,7 @@ async function createPlacementGuides(doc, prepRoot, constants, zonePreset) {
     safeStroke,
   );
 
-  // TAPE / FRAME MARGIN (bigger than artwork)
-  const tapePadding = 120; // px – adjustable later
+  const tapePadding = 120;
 
   addRectangleOutline(
     commands,
@@ -491,6 +520,7 @@ async function createPlacementGuides(doc, prepRoot, constants, zonePreset) {
     bottom + tapePadding,
     tapeStroke,
   );
+
   commands.push(
     rectSelectionCommand(
       centreX - centreStroke / 2,
@@ -549,6 +579,338 @@ async function createJobInfo(doc, prepRoot, constants, setup, zonePreset) {
   }
 
   infoGroup.visible = false;
+}
+
+async function runPreflight() {
+  syncJobState();
+
+  const setup = getActivePrintSetup();
+  const zonePreset = getActiveZonePreset();
+
+  await core.executeAsModal(
+    async () => {
+      const doc = app.activeDocument;
+      if (!doc) {
+        throw new Error("No active document found.");
+      }
+
+      const selectedLayers = doc.activeLayers;
+      if (!selectedLayers || selectedLayers.length === 0) {
+        throw new Error("No selected original artwork layer(s).");
+      }
+
+      const warnings = [];
+      const passes = [];
+
+      for (const layer of selectedLayers) {
+        if (isPrepLayerName(layer.name)) {
+          warnings.push(
+            `Selected layer "${layer.name}" looks like PREP output. Select ORIGINAL artwork instead.`,
+          );
+        }
+      }
+
+      if (warnings.length === 0) {
+        passes.push("Selected layer(s) look like ORIGINAL artwork.");
+      }
+
+      const screenCount = getInkScreenCount(jobState.ink);
+      if (screenCount <= 0) {
+        warnings.push(`Unknown ink profile: ${jobState.ink}`);
+      } else if (screenCount > 4) {
+        warnings.push(`Ink profile exceeds 4-screen cap: ${screenCount}`);
+      } else {
+        passes.push(`Screen count OK: ${screenCount}/4`);
+      }
+
+      const bounds = selectedLayers[0].bounds;
+      const left = toNumber(bounds.left);
+      const right = toNumber(bounds.right);
+      const top = toNumber(bounds.top);
+      const bottom = toNumber(bounds.bottom);
+
+      const artworkWidth = right - left;
+      const artworkHeight = bottom - top;
+
+      if (artworkWidth <= 0 || artworkHeight <= 0) {
+        warnings.push("Selected artwork has empty or unreadable bounds.");
+      } else {
+        passes.push(
+          `Artwork bounds OK: ${Math.round(artworkWidth)} x ${Math.round(
+            artworkHeight,
+          )} px`,
+        );
+      }
+
+      if (zonePreset.artworkMaxWidth <= 0 || zonePreset.artworkMaxHeight <= 0) {
+        warnings.push("Zone preset has invalid artwork max size.");
+      } else {
+        passes.push(
+          `Zone max OK: ${zonePreset.artworkMaxWidth} x ${zonePreset.artworkMaxHeight} px`,
+        );
+      }
+
+      if (
+        setup.registrationSize <= 0 ||
+        setup.registrationStroke <= 0 ||
+        setup.registrationOffset <= 0
+      ) {
+        warnings.push("Registration mark settings are invalid.");
+      } else {
+        passes.push(
+          `Registration OK: ${setup.registrationSize}px mark / ${setup.registrationStroke}px stroke`,
+        );
+      }
+
+      const result =
+        warnings.length === 0 ? "Preflight passed ✅" : "Preflight warnings ⚠️";
+
+      setStatus(
+        `${result}
+
+${passes.map((p) => `✅ ${p}`).join("\n")}
+
+${warnings.map((w) => `⚠️ ${w}`).join("\n")}`,
+      );
+    },
+    { commandName: "Imperial Print Preflight" },
+  );
+}
+
+async function runPostPrepValidation() {
+  await core.executeAsModal(
+    async () => {
+      const doc = app.activeDocument;
+      if (!doc) {
+        throw new Error("No active document found.");
+      }
+
+      const prepRoot = await findTopGroupByName(doc, "PRINT_PREP");
+      if (!prepRoot) {
+        throw new Error("PRINT_PREP group not found. Run Prep first.");
+      }
+
+      const working = await findExistingWorkingGroup(prepRoot);
+      if (!working) {
+        throw new Error("No 03_ARTWORK_WORKING group found. Run Prep first.");
+      }
+
+      let placement = null;
+
+      for (const layer of working.layers || []) {
+        if (layer.kind === "group" && layer.name === "PLACEMENT_WORKING") {
+          placement = layer;
+          break;
+        }
+      }
+
+      if (!placement) {
+        throw new Error("PLACEMENT_WORKING group not found. Run Prep first.");
+      }
+
+      syncJobState();
+
+      const zonePreset = getActiveZonePreset();
+      const meshProfile = getActiveMeshProfile();
+
+      const warnings = [];
+      const passes = [];
+
+      const docW = toNumber(doc.width);
+      const docH = toNumber(doc.height);
+
+      const centreX = docW * (zonePreset.positionX / 100);
+      const centreY = docH * (zonePreset.positionY / 100);
+
+      const maxLeft = centreX - zonePreset.artworkMaxWidth / 2;
+      const maxRight = centreX + zonePreset.artworkMaxWidth / 2;
+      const maxTop = centreY - zonePreset.artworkMaxHeight / 2;
+      const maxBottom = centreY + zonePreset.artworkMaxHeight / 2;
+
+      const safeMargin = 0.95;
+      const safeW = zonePreset.artworkMaxWidth * safeMargin;
+      const safeH = zonePreset.artworkMaxHeight * safeMargin;
+
+      const safeLeft = centreX - safeW / 2;
+      const safeRight = centreX + safeW / 2;
+      const safeTop = centreY - safeH / 2;
+      const safeBottom = centreY + safeH / 2;
+
+      const b = placement.bounds;
+      const left = toNumber(b.left);
+      const right = toNumber(b.right);
+      const top = toNumber(b.top);
+      const bottom = toNumber(b.bottom);
+
+      const artworkWidth = right - left;
+      const artworkHeight = bottom - top;
+
+      if (artworkWidth <= 0 || artworkHeight <= 0) {
+        warnings.push("Prepared artwork bounds are empty or unreadable.");
+      } else {
+        passes.push(
+          `Prepared artwork bounds OK: ${Math.round(
+            artworkWidth,
+          )} x ${Math.round(artworkHeight)} px`,
+        );
+      }
+
+      if (
+        left < maxLeft ||
+        right > maxRight ||
+        top < maxTop ||
+        bottom > maxBottom
+      ) {
+        warnings.push(
+          "Artwork exceeds MAX PRINT AREA. It may clip or exceed the intended print zone.",
+        );
+      } else {
+        passes.push("Artwork is within max print boundary.");
+      }
+      if (
+        left < safeLeft ||
+        right > safeRight ||
+        top < safeTop ||
+        bottom > safeBottom
+      ) {
+        warnings.push(
+          "Review note: artwork extends beyond the SAFE/CAUTION AREA but remains within the max print boundary.",
+        );
+      } else {
+        passes.push("Artwork is inside the safe/caution area.");
+      }
+
+      const marginLeft = left - safeLeft;
+      const marginRight = safeRight - right;
+      const marginTop = top - safeTop;
+      const marginBottom = safeBottom - bottom;
+
+      const smallestSafeMargin = Math.min(
+        marginLeft,
+        marginRight,
+        marginTop,
+        marginBottom,
+      );
+
+      if (smallestSafeMargin < 0) {
+        warnings.push(
+          `Review note: artwork crosses the safe/caution area by ${Math.abs(
+            Math.round(smallestSafeMargin),
+          )} px. This is acceptable for intentional full-size prints.`,
+        );
+      } else if (smallestSafeMargin < 40) {
+        warnings.push(
+          `Review note: artwork is close to the safe/caution area edge. Smallest caution margin: ${Math.round(
+            smallestSafeMargin,
+          )} px.`,
+        );
+      } else {
+        passes.push(
+          `Safe/caution spacing OK. Smallest caution margin: ${Math.round(
+            smallestSafeMargin,
+          )} px.`,
+        );
+      }
+
+      const screenCount = getInkScreenCount(jobState.ink);
+
+      if (screenCount > 4) {
+        warnings.push(`Screen count exceeds 4-screen cap: ${screenCount}`);
+      } else if (screenCount > 0) {
+        passes.push(`Screen count still OK: ${screenCount}/4`);
+      } else {
+        warnings.push(`Unknown ink profile: ${jobState.ink}`);
+      }
+
+      passes.push(`Mesh profile loaded: ${meshProfile.label}`);
+
+      passes.push(
+        `Mesh thresholds: min line ${meshProfile.minLinePx}px / min text height ${meshProfile.minTextHeightPx}px`,
+      );
+
+      const checkedLayers = [];
+
+      async function collectPrintableLayers(group, result) {
+        for (const layer of group.layers || []) {
+          if (layer.kind === "group") {
+            await collectPrintableLayers(layer, result);
+          } else {
+            result.push(layer);
+          }
+        }
+      }
+
+      await collectPrintableLayers(placement, checkedLayers);
+
+      if (checkedLayers.length === 0) {
+        warnings.push(
+          "No printable child layers found inside PLACEMENT_WORKING.",
+        );
+      } else {
+        passes.push(`Printable layer count OK: ${checkedLayers.length}`);
+      }
+
+      for (const layer of checkedLayers) {
+        const layerName = String(layer.name || "Unnamed Layer");
+        const lb = layer.bounds;
+
+        const layerLeft = toNumber(lb.left);
+        const layerRight = toNumber(lb.right);
+        const layerTop = toNumber(lb.top);
+        const layerBottom = toNumber(lb.bottom);
+
+        const layerW = layerRight - layerLeft;
+        const layerH = layerBottom - layerTop;
+
+        if (layerW <= 0 || layerH <= 0) {
+          warnings.push(`Layer "${layerName}" has unreadable bounds.`);
+          continue;
+        }
+
+        const smallestSide = Math.min(layerW, layerH);
+
+        if (smallestSide < meshProfile.minLinePx) {
+          warnings.push(
+            `Layer "${layerName}" has a very thin/short printable dimension (${Math.round(
+              smallestSide,
+            )}px). Risky for ${meshProfile.label}.`,
+          );
+        }
+
+        const looksLikeText =
+          layerName.toLowerCase().includes("text") ||
+          layerName.toLowerCase().includes("tagline") ||
+          layerName.toLowerCase().includes("type") ||
+          layerName.toLowerCase().includes("copy");
+
+        if (looksLikeText && layerH < meshProfile.minTextHeightPx) {
+          warnings.push(
+            `Possible small text risk on "${layerName}" (${Math.round(
+              layerH,
+            )}px high). May not hold cleanly on ${meshProfile.label}.`,
+          );
+        }
+      }
+
+      warnings.push(
+        "True pixel-level stroke scanning is not active yet. This pass checks bounds, layer scale, mesh profile, and likely text/detail risks.",
+      );
+
+      const result =
+        warnings.length === 0
+          ? "Print validation passed ✅"
+          : "Print validation warnings ⚠️";
+
+      setStatus(
+        `${result}
+
+${passes.map((p) => `✅ ${p}`).join("\n")}
+
+${warnings.map((w) => `⚠️ ${w}`).join("\n")}`,
+      );
+    },
+    { commandName: "Imperial Print Validation" },
+  );
 }
 
 async function runPrep({ rebuild }) {
@@ -698,7 +1060,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const watch = ["garment", "zone", "ink", "printSetup", "distressLevel"];
+  const watch = [
+    "garment",
+    "zone",
+    "ink",
+    "printSetup",
+    "meshProfile",
+    "distressLevel",
+  ];
   for (const id of watch) {
     const el = document.getElementById(id);
     if (el) {
@@ -708,6 +1077,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const runPrepBtn = document.getElementById("runPrep");
+  const preflightBtn = document.getElementById("runPreflight");
+  const validateBtn = document.getElementById("validatePrint");
   const toggleBtn = document.getElementById("toggleOriginals");
   const rebuildBtn = document.getElementById("rebuildPrep");
   const previewBtn = document.getElementById("previewDistress");
@@ -720,6 +1091,30 @@ document.addEventListener("DOMContentLoaded", () => {
         await runPrep({ rebuild: false });
       } catch (e) {
         setStatus(`Prep failed ❌\n${e && e.message ? e.message : String(e)}`);
+      }
+    });
+  }
+
+  if (preflightBtn) {
+    preflightBtn.addEventListener("click", async () => {
+      try {
+        await runPreflight();
+      } catch (e) {
+        setStatus(
+          `Preflight failed ❌\n${e && e.message ? e.message : String(e)}`,
+        );
+      }
+    });
+  }
+
+  if (validateBtn) {
+    validateBtn.addEventListener("click", async () => {
+      try {
+        await runPostPrepValidation();
+      } catch (e) {
+        setStatus(
+          `Validation failed ❌\n${e && e.message ? e.message : String(e)}`,
+        );
       }
     });
   }
